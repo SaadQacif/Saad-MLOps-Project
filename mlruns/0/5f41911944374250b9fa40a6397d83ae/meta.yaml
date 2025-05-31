@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/5f41911944374250b9fa40a6397d83ae/artifacts
+end_time: 1748712409028
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5f41911944374250b9fa40a6397d83ae
+run_name: bright-hound-120
+run_uuid: 5f41911944374250b9fa40a6397d83ae
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712151525
+status: 3
+tags: []
+user_id: PC

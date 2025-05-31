@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/d6d8c9ad4e8543098b4423326b19e009/artifacts
+end_time: 1748712146106
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d6d8c9ad4e8543098b4423326b19e009
+run_name: adaptable-sheep-126
+run_uuid: d6d8c9ad4e8543098b4423326b19e009
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712133027
+status: 3
+tags: []
+user_id: PC

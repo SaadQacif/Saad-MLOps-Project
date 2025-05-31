@@ -1,0 +1,98 @@
+{
+  "evaluation_timestamp": "2025-05-29T16:38:40.068592",
+  "model_performance": {
+    "MLP": {
+      "accuracy": 0.9814385150812065,
+      "precision": 0.9818754605611296,
+      "recall": 0.9814385150812065,
+      "f1_score": 0.9814386061826295,
+      "per_class_metrics": {
+        "Potato___healthy": {
+          "precision": 0.9393939393939394,
+          "recall": 1.0,
+          "f1_score": 0.96875,
+          "support": 31
+        },
+        "Potato___Early_blight": {
+          "precision": 0.9754901960784313,
+          "recall": 0.995,
+          "f1_score": 0.9851485148514851,
+          "support": 200
+        },
+        "Potato___Late_blight": {
+          "precision": 0.9948453608247423,
+          "recall": 0.965,
+          "f1_score": 0.9796954314720813,
+          "support": 200
+        }
+      }
+    },
+    "Random_Forest": {
+      "accuracy": 0.9721577726218097,
+      "precision": 0.972508995488809,
+      "recall": 0.9721577726218097,
+      "f1_score": 0.9721112580781355,
+      "per_class_metrics": {
+        "Potato___healthy": {
+          "precision": 1.0,
+          "recall": 0.9354838709677419,
+          "f1_score": 0.9666666666666667,
+          "support": 31
+        },
+        "Potato___Early_blight": {
+          "precision": 0.9611650485436893,
+          "recall": 0.99,
+          "f1_score": 0.9753694581280788,
+          "support": 200
+        },
+        "Potato___Late_blight": {
+          "precision": 0.9795918367346939,
+          "recall": 0.96,
+          "f1_score": 0.9696969696969697,
+          "support": 200
+        }
+      }
+    },
+    "SVM": {
+      "accuracy": 0.974477958236659,
+      "precision": 0.9745005806119631,
+      "recall": 0.974477958236659,
+      "f1_score": 0.9744836137244419,
+      "per_class_metrics": {
+        "Potato___healthy": {
+          "precision": 0.967741935483871,
+          "recall": 0.967741935483871,
+          "f1_score": 0.967741935483871,
+          "support": 31
+        },
+        "Potato___Early_blight": {
+          "precision": 0.9798994974874372,
+          "recall": 0.975,
+          "f1_score": 0.9774436090225563,
+          "support": 200
+        },
+        "Potato___Late_blight": {
+          "precision": 0.9701492537313433,
+          "recall": 0.975,
+          "f1_score": 0.972568578553616,
+          "support": 200
+        }
+      }
+    }
+  },
+  "best_model": {
+    "name": "MLP",
+    "accuracy": 0.9814385150812065
+  },
+  "feature_count": 121,
+  "class_names": [
+    "Potato___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight"
+  ],
+  "evaluation_summary": {
+    "total_models": 3,
+    "average_accuracy": 0.9760247486465584,
+    "std_accuracy": 0.003943557241757777
+  }
+}

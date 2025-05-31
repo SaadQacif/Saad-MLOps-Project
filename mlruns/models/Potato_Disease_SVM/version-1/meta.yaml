@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1748712151499
+current_stage: None
+description: null
+last_updated_timestamp: 1748712151499
+name: Potato_Disease_SVM
+run_id: 8a5ff2e5efb9431ba1c593fcc2308904
+run_link: null
+source: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/8a5ff2e5efb9431ba1c593fcc2308904/artifacts/SVM_model
+status: READY
+status_message: null
+storage_location: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/8a5ff2e5efb9431ba1c593fcc2308904/artifacts/SVM_model
+user_id: null
+version: 1

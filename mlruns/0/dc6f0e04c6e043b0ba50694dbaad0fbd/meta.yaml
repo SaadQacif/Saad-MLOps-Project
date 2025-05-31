@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/dc6f0e04c6e043b0ba50694dbaad0fbd/artifacts
+end_time: 1748712125414
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: dc6f0e04c6e043b0ba50694dbaad0fbd
+run_name: colorful-turtle-694
+run_uuid: dc6f0e04c6e043b0ba50694dbaad0fbd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712084991
+status: 3
+tags: []
+user_id: PC

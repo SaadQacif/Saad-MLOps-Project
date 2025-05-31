@@ -1,0 +1,37 @@
+# Core dependencies
+numpy>=1.22.0
+pillow>=9.0.0
+opencv-python>=4.5.0
+scikit-image>=0.19.0
+scikit-learn>=1.0.0
+scipy>=1.9.0
+textstat>=0.7.0
+matplotlib>=3.5.0
+pandas>=1.4.0
+seaborn>=0.11.0
+joblib>=1.2.0
+streamlit>=1.28.0
+PyWavelets>=1.4.0
+
+# API dependencies
+flask>=2.0.0
+flask-restx>=1.1.0  # For API documentation
+werkzeug>=2.0.0
+gunicorn>=20.1.0
+
+# MLOps dependencies
+mlflow>=2.3.0
+pyyaml>=6.0
+sqlalchemy>=1.4.0
+sqlalchemy_utils>=0.38.0
+kubernetes>=28.1.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-cov>=2.0.0
+flake8>=4.0.0
+black>=22.0.0
+isort>=5.12.0
+
+# Docker and deployment
+python-dotenv>=0.20.0

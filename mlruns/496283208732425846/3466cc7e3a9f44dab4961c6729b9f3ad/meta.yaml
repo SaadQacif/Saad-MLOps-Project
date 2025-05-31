@@ -1,0 +1,15 @@
+artifact_uri: file:///app/mlruns/496283208732425846/3466cc7e3a9f44dab4961c6729b9f3ad/artifacts
+end_time: 1748712418707
+entry_point_name: ''
+experiment_id: '496283208732425846'
+lifecycle_stage: active
+run_id: 3466cc7e3a9f44dab4961c6729b9f3ad
+run_name: Complete_Pipeline_Run
+run_uuid: 3466cc7e3a9f44dab4961c6729b9f3ad
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748711991162
+status: 3
+tags: []
+user_id: PC

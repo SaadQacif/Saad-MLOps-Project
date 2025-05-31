@@ -1,0 +1,28 @@
+digest: 9ee1ea89
+name: potato_disease_dataset
+profile: '{"num_rows": 2152, "num_elements": 68864}'
+schema: '{"mlflow_colspec": [{"type": "float", "name": "r_dev", "required": true},
+  {"type": "float", "name": "g_dev", "required": true}, {"type": "float", "name":
+  "b_dev", "required": true}, {"type": "float", "name": "red_mean", "required": true},
+  {"type": "float", "name": "red_std", "required": true}, {"type": "float", "name":
+  "red_kurtosis", "required": true}, {"type": "float", "name": "red_skew", "required":
+  true}, {"type": "float", "name": "green_mean", "required": true}, {"type": "float",
+  "name": "green_std", "required": true}, {"type": "float", "name": "green_kurtosis",
+  "required": true}, {"type": "float", "name": "green_skew", "required": true}, {"type":
+  "float", "name": "blue_mean", "required": true}, {"type": "float", "name": "blue_std",
+  "required": true}, {"type": "float", "name": "blue_kurtosis", "required": true},
+  {"type": "float", "name": "blue_skew", "required": true}, {"type": "float", "name":
+  "green_ratio", "required": true}, {"type": "float", "name": "diseased_ratio", "required":
+  true}, {"type": "float", "name": "entropy_mean", "required": true}, {"type": "float",
+  "name": "entropy_std", "required": true}, {"type": "float", "name": "entropy_variation_rhythm",
+  "required": true}, {"type": "float", "name": "texture_contrast", "required": true},
+  {"type": "float", "name": "avg_convexity", "required": true}, {"type": "float",
+  "name": "min_convexity", "required": true}, {"type": "float", "name": "contour_area",
+  "required": true}, {"type": "float", "name": "contour_perimeter", "required": true},
+  {"type": "float", "name": "circularity", "required": true}, {"type": "float", "name":
+  "eccentricity", "required": true}, {"type": "float", "name": "solidity", "required":
+  true}, {"type": "float", "name": "aspect_ratio", "required": true}, {"type": "float",
+  "name": "area_bbox_ratio", "required": true}, {"type": "string", "name": "label",
+  "required": true}, {"type": "string", "name": "image_path", "required": true}]}'
+source: '{"uri": "Potato_Health_States"}'
+source_type: local

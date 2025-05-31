@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/994fd37b4ed24dfc860056a3bfd8d259/artifacts
+end_time: 1748712409028
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 994fd37b4ed24dfc860056a3bfd8d259
+run_name: traveling-bee-95
+run_uuid: 994fd37b4ed24dfc860056a3bfd8d259
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712151525
+status: 3
+tags: []
+user_id: PC

@@ -1,0 +1,22 @@
+{
+  "pipeline_completion_time": "2025-05-31T17:26:58.696196",
+  "total_samples_processed": 2152,
+  "total_models_trained": 3,
+  "best_performing_model": "SVM",
+  "best_model_accuracy": 0.9164733178654292,
+  "dataset_info": {
+    "total_classes": 3,
+    "class_names": [
+      "Potato___Early_blight",
+      "Potato___healthy",
+      "Potato___Late_blight"
+    ],
+    "samples_per_class": {
+      "Potato___Early_blight": 1000,
+      "Potato___healthy": 152,
+      "Potato___Late_blight": 1000
+    },
+    "total_samples": 2152,
+    "feature_dimensions": 30
+  }
+}

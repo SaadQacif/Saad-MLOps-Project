@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/ddb671d6011843e0b74a851f15872ade/artifacts
+end_time: 1748712125414
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ddb671d6011843e0b74a851f15872ade
+run_name: bedecked-mule-906
+run_uuid: ddb671d6011843e0b74a851f15872ade
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712084991
+status: 3
+tags: []
+user_id: PC

@@ -1,0 +1,33 @@
+name: CI for ML Pipeline with DVC
+on:
+  push:
+    branches: [main]
+jobs:
+  build-test-dvc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y python3-opencv
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install dvc[s3]  # Add [s3] if you use S3 as remote, otherwise just dvc
+      - name: Pull DVC data (if remote configured)
+        run: |
+          dvc pull || echo 'No DVC remote configured, skipping.'
+      - name: Run DVC pipeline
+        run: dvc repro
+      - name: Run all unit tests
+        run: pytest tests/
+      - name: Upload workflow output (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow_output
+          path: workflow_output/

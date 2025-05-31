@@ -1,0 +1,39 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libgl1-mesa-glx \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY configs/ ./configs/
+COPY data/ ./data/
+COPY models/ ./models/
+
+# Create necessary directories
+RUN mkdir -p /app/tmp /app/visualizations /app/mlruns
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV MLFLOW_TRACKING_URI=http://mlflow-server:5000
+
+# Default command - can be overridden
+CMD ["python", "scripts/training_pipeline.py"]

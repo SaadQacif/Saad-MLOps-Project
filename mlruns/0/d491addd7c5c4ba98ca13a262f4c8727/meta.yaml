@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/d491addd7c5c4ba98ca13a262f4c8727/artifacts
+end_time: 1748712146106
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d491addd7c5c4ba98ca13a262f4c8727
+run_name: industrious-doe-977
+run_uuid: d491addd7c5c4ba98ca13a262f4c8727
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712133027
+status: 3
+tags: []
+user_id: PC

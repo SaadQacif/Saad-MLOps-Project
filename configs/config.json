@@ -1,0 +1,44 @@
+{
+  "paths": {
+    "data": {
+      "input": "data/inputs",
+      "output": "data/outputs",
+      "upload": "data/uploads",
+      "temp": "tmp"
+    },
+    "models": {
+      "directory": "models/bin",
+      "model_file": "models_by_features.pkl",
+      "encoder_file": "encoder.pkl",
+      "metadata_file": "model_metadata.json"
+    },
+    "visualizations": "visualizations"
+  },
+  "model": {
+    "type": "RandomForest",
+    "parameters": {
+      "n_estimators": 100,
+      "max_depth": 10,
+      "random_state": 42
+    },
+    "training": {
+      "test_size": 0.25,
+      "random_state": 42
+    }
+  },
+  "image_processing": {
+    "contour": {
+      "threshold": 70,
+      "kernel_size": 3
+    },
+    "clahe": {
+      "clip_limit": 2.0,
+      "tile_grid_size": [8, 8]
+    }
+  },
+  "api": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "debug": false
+  }
+}

@@ -1,0 +1,6 @@
+artifact_location: file:C:/app/mlruns/1
+creation_time: 1748711755626
+experiment_id: '742109155136636790'
+last_update_time: 1748711755626
+lifecycle_stage: active
+name: potato-disease-classification

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/f96b2e9d08794f6b94d53a4ab975ff3d/artifacts
+end_time: 1748712133016
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: f96b2e9d08794f6b94d53a4ab975ff3d
+run_name: RandomForest_Training
+run_uuid: f96b2e9d08794f6b94d53a4ab975ff3d
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712084991
+status: 3
+tags: []
+user_id: PC

@@ -1,0 +1,22 @@
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN pip install mlflow==2.22.0 boto3==1.29.7
+
+# Create required directories with proper permissions
+RUN mkdir -p /app/mlruns /app/models /app/data && \
+    chmod -R 777 /app/mlruns
+
+# Expose port
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+
+# Simple command to run MLflow with file system backend
+CMD ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "file:///app/mlruns", "--default-artifact-root", "file:///app/mlruns"]

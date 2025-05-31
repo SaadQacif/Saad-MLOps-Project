@@ -1,0 +1,28 @@
+{  "mlflow": {
+    "experiment_name": "potato-disease-classification",
+    "tracking_uri": "http://localhost:5000",
+    "artifact_location": "file:///mlruns",
+    "registry_uri": "http://localhost:5000",
+    "server": {
+      "host": "0.0.0.0",
+      "port": 5001,
+      "backend_store_uri": "sqlite:///mlflow.db",
+      "default_artifact_root": "./mlruns"
+    },
+    "tags": {
+      "project": "potato-disease-classification",
+      "team": "mlops-team",
+      "env": "local"
+    },
+    "parameters": {
+      "seed": 42,
+      "batch_size": 32,
+      "test_split": 0.2,
+      "validation_split": 0.1
+    },
+    "model_registry": {
+      "stage": "Production",
+      "description": "Potato Disease Classification Model"
+    }
+  }
+}

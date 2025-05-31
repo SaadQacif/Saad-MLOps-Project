@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: drift-detection
+  namespace: potato-disease-ml
+  labels:
+    app: drift-detection
+    component: monitoring
+spec:
+  schedule: "0 */6 * * *" # Every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: drift-detection
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: drift-detector
+            image: ghcr.io/qacifsaad/mlops-python:latest
+            env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow-server:5000"
+            - name: MODEL_API_URL
+              value: "http://model-api:8000"
+            - name: PYTHONPATH
+              value: "/app"
+            volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: monitoring-volume
+              mountPath: /app/monitoring
+            command:
+            - python
+            - scripts/drift_detection.py
+            - --reference-data-path
+            - /app/data/reference
+            - --current-data-path
+            - /app/data/current
+            - --output-path
+            - /app/monitoring/drift_reports
+            resources:
+              requests:
+                memory: "1Gi"
+                cpu: "500m"
+              limits:
+                memory: "2Gi"
+                cpu: "1000m"
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: data-pvc
+          - name: monitoring-volume
+            persistentVolumeClaim:
+              claimName: monitoring-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: monitoring-pvc
+  namespace: potato-disease-ml
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi

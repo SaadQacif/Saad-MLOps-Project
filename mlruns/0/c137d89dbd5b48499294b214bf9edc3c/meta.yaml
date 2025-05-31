@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/c137d89dbd5b48499294b214bf9edc3c/artifacts
+end_time: 1748712125414
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c137d89dbd5b48499294b214bf9edc3c
+run_name: bouncy-swan-454
+run_uuid: c137d89dbd5b48499294b214bf9edc3c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712084991
+status: 3
+tags: []
+user_id: PC

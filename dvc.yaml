@@ -1,0 +1,23 @@
+stages:
+  preprocess:
+    cmd: python scripts/complete_mlflow_pipeline.py preprocess
+    deps:
+      - scripts/complete_mlflow_pipeline.py
+      - Potato_Health_States/
+    outs:
+      - data/processed/
+  train:
+    cmd: python scripts/complete_mlflow_pipeline.py train
+    deps:
+      - scripts/complete_mlflow_pipeline.py
+      - data/processed/
+    outs:
+      - models/
+  test:
+    cmd: pytest tests/
+    deps:
+      - scripts/complete_mlflow_pipeline.py
+      - tests/
+      - models/
+    outs:
+      - workflow_output/

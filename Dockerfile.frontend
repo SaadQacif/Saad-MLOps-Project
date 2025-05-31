@@ -1,0 +1,65 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libgl1-mesa-glx \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install dependencies
+COPY requirements_frontend.txt .
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install core dependencies first
+RUN pip install --no-cache-dir \
+    numpy==1.24.3 \
+    pandas==2.0.3 \
+    matplotlib==3.7.2 \
+    seaborn==0.12.2 \
+    pillow==10.0.0 \
+    scikit-learn==1.3.0 \
+    opencv-python-headless==4.8.0.76
+
+# Install web and visualization dependencies
+RUN pip install --no-cache-dir \
+    streamlit==1.32.0 \
+    plotly==5.15.0 \
+    requests==2.31.0 \
+    urllib3==1.26.16
+
+# Install from requirements as fallback
+RUN pip install --no-cache-dir -r requirements_frontend.txt || true
+
+# Copy application code
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY configs/ ./configs/
+COPY models/ ./models/
+COPY data/ ./data/
+
+# Create necessary directories
+RUN mkdir -p /app/tmp /app/visualizations /app/mlruns
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV STREAMLIT_SERVER_ENABLE_CORS=true
+
+# Expose port for Streamlit
+EXPOSE 8501
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+
+# Command to run the Streamlit app
+CMD ["streamlit", "run", "src/enhanced_complete_frontend_fixed.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]

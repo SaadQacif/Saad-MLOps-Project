@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/907dab7cbf114fe3ae77fc4a942cfc2e/artifacts
+end_time: 1748712409028
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 907dab7cbf114fe3ae77fc4a942cfc2e
+run_name: rumbling-shrike-986
+run_uuid: 907dab7cbf114fe3ae77fc4a942cfc2e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1748712151525
+status: 3
+tags: []
+user_id: PC

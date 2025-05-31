@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1748712133006
+current_stage: None
+description: null
+last_updated_timestamp: 1748712133006
+name: Potato_Disease_RandomForest
+run_id: f96b2e9d08794f6b94d53a4ab975ff3d
+run_link: null
+source: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/f96b2e9d08794f6b94d53a4ab975ff3d/artifacts/RandomForest_model
+status: READY
+status_message: null
+storage_location: file:///C:/Users/PC/Desktop/mlops-python/mlruns/0/f96b2e9d08794f6b94d53a4ab975ff3d/artifacts/RandomForest_model
+user_id: null
+version: 1
