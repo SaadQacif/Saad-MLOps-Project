@@ -24,14 +24,15 @@ jobs:
 
       - name: Build and start containers
         run: |
-          docker-compose up -d --build
+          docker-compose -f docker-compose.yml build
+          docker-compose -f docker-compose.yml up -d
 
       - name: Wait for containers to be healthy
         run: |
           echo "Waiting for MLflow and Streamlit containers to be healthy..."
           for i in {1..30}; do
-            ML_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' mlflow)
-            FRONTEND_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' frontend)
+            ML_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' potato-mlflow)
+            FRONTEND_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' potato-frontend)
             echo "MLflow: $ML_HEALTH, Frontend: $FRONTEND_HEALTH"
             if [ "$ML_HEALTH" = "healthy" ] && [ "$FRONTEND_HEALTH" = "healthy" ]; then
               echo "Both containers are healthy!"
