@@ -5,6 +5,7 @@ on:
     workflows: ["CI for ML Pipeline"]
     types:
       - completed
+  workflow_dispatch:    
 
 jobs:
   deploy:
