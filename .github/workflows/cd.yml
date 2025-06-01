@@ -18,10 +18,10 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Install Docker Compose, Node.js, npm
+      - name: Install Docker Compose, Node.js, npm, curl
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose nodejs npm
+          sudo apt-get install -y docker-compose nodejs npm curl
 
       - name: Build and start containers
         run: |
@@ -61,15 +61,24 @@ jobs:
           echo "MLFLOW_TUNNEL=$MLFLOW_URL" >> $GITHUB_ENV
           echo "MLflow UI LocalTunnel URL: $MLFLOW_URL"
 
-      - name: Print both tunnel links in one place
+      - name: Retrieve LocalTunnel password (tunnel unlock password)
+        id: get_password
+        run: |
+          # Get public IP of GitHub Actions runner (used by LocalTunnel as tunnel password)
+          TUNNEL_PASSWORD=$(curl -s https://api.ipify.org)
+          echo "LOCAL_TUNNEL_PASSWORD=$TUNNEL_PASSWORD" >> $GITHUB_ENV
+          echo "Tunnel password (use this to unlock LocalTunnel web page): $TUNNEL_PASSWORD"
+
+      - name: Print both tunnel links and password
         run: |
           echo "---- TUNNEL LINKS ----"
           echo "Frontend: $FRONTEND_TUNNEL"
           echo "MLflow:   $MLFLOW_TUNNEL"
+          echo "Tunnel password (public IP): $LOCAL_TUNNEL_PASSWORD"
           echo "----------------------"
 
       - name: Keep job alive (1 hour)
-        run: sleep 3600
+        run: sleep 360
 
       - name: Upload MLflow artifacts (optional)
         if: always()
