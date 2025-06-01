@@ -22,12 +22,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose nodejs npm curl
-
       - name: Build and start containers
         run: |
+          # Ensure all required directories exist and have correct permissions
+          mkdir -p mlruns models data
+          chmod -R 777 mlruns models data || true
           docker-compose -f docker-compose.yml build
           docker-compose -f docker-compose.yml up -d
-
       - name: Wait for containers to be healthy
         run: |
           echo "Waiting for MLflow and Streamlit containers to be healthy..."
@@ -41,7 +42,6 @@ jobs:
             fi
             sleep 5
           done
-
       - name: Install LocalTunnel globally
         run: npm install -g localtunnel
 
@@ -52,7 +52,6 @@ jobs:
           FRONTEND_URL=$(grep -o 'https://[a-zA-Z0-9.-]*.loca.lt' lt-frontend.log | tail -1)
           echo "FRONTEND_TUNNEL=$FRONTEND_URL" >> $GITHUB_ENV
           echo "Streamlit frontend LocalTunnel URL: $FRONTEND_URL"
-
       - name: Expose MLflow UI with LocalTunnel
         run: |
           nohup lt --port 5000 > lt-mlflow.log 2>&1 &
@@ -60,7 +59,6 @@ jobs:
           MLFLOW_URL=$(grep -o 'https://[a-zA-Z0-9.-]*.loca.lt' lt-mlflow.log | tail -1)
           echo "MLFLOW_TUNNEL=$MLFLOW_URL" >> $GITHUB_ENV
           echo "MLflow UI LocalTunnel URL: $MLFLOW_URL"
-
       - name: Retrieve LocalTunnel password (tunnel unlock password)
         id: get_password
         run: |
@@ -68,7 +66,6 @@ jobs:
           TUNNEL_PASSWORD=$(curl -s https://api.ipify.org)
           echo "LOCAL_TUNNEL_PASSWORD=$TUNNEL_PASSWORD" >> $GITHUB_ENV
           echo "Tunnel password (use this to unlock LocalTunnel web page): $TUNNEL_PASSWORD"
-
       - name: Print both tunnel links and password
         run: |
           echo "---- TUNNEL LINKS ----"
@@ -76,7 +73,6 @@ jobs:
           echo "MLflow:   $MLFLOW_TUNNEL"
           echo "Tunnel password (public IP): $LOCAL_TUNNEL_PASSWORD"
           echo "----------------------"
-
       - name: Keep job alive (1 hour)
         run: sleep 360
 
