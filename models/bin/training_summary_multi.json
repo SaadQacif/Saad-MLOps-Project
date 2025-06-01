@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-05-31T03:28:27.486567",
+  "total_samples": 2152,
+  "train_samples": 1721,
+  "test_samples": 431,
+  "feature_count": 30,
+  "classes": [
+    "Potato___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight"
+  ],
+  "model_results": {
+    "Random_Forest": {
+      "test_accuracy": 0.8932714617169374,
+      "best_params": {
+        "max_depth": 20,
+        "min_samples_split": 2,
+        "n_estimators": 100
+      }
+    },
+    "SVM": {
+      "test_accuracy": 0.9373549883990719,
+      "best_params": {
+        "C": 10,
+        "gamma": "scale",
+        "kernel": "rbf"
+      }
+    },
+    "MLP": {
+      "test_accuracy": 0.925754060324826,
+      "best_params": {
+        "activation": "tanh",
+        "alpha": 0.001,
+        "hidden_layer_sizes": [
+          100,
+          50
+        ]
+      }
+    }
+  }
+}

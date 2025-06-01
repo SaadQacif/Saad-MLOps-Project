@@ -36,30 +36,8 @@ coverage.xml
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Environment
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Project-specific
-data/inputs/*
-!data/inputs/.gitkeep
-data/outputs/*
-!data/outputs/.gitkeep
-data/uploads/*
-!data/uploads/.gitkeep
-tmp/
-visualizations/*
-!visualizations/.gitkeep
-models/bin/*
-!models/bin/.gitkeep
