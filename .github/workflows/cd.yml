@@ -1,86 +1,73 @@
 name: CD for Potato Project
 
+# Builds the docker-compose stack (MLflow + Streamlit) after a successful CI run on
+# main, waits for both health checks, smoke-tests the endpoints from inside the
+# runner and tears the stack down. Nothing is exposed outside the runner.
+# On other branches the same check runs whenever the container setup changes.
+
 on:
   workflow_run:
     workflows: ["CI for ML Pipeline"]
-    types:
-      - completed    
+    types: [completed]
+    branches: [main]
+  push:
+    branches-ignore: [main]
+    paths:
+      - "Dockerfile*"
+      - "docker-compose.yml"
+      - "requirements*.txt"
+      - ".github/workflows/cd.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
+  deploy-smoke-test:
+    # after CI: only commits whose CI passed, and only for pushes (not pull requests)
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - name: Checkout code
+      - name: Checkout (the commit CI tested, when triggered by CI)
         uses: actions/checkout@v4
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: Install Docker Compose, Node.js, npm, curl
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose nodejs npm curl
-      - name: Build and start containers
-        run: |
-          # Ensure all required directories exist and have correct permissions
-          mkdir -p mlruns models data
-          chmod -R 777 mlruns models data || true
-          docker-compose -f docker-compose.yml build
-          docker-compose -f docker-compose.yml up -d
-      - name: Wait for containers to be healthy
-        run: |
-          echo "Waiting for MLflow and Streamlit containers to be healthy..."
-          for i in {1..30}; do
-            ML_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' potato-mlflow)
-            FRONTEND_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' potato-frontend)
-            echo "MLflow: $ML_HEALTH, Frontend: $FRONTEND_HEALTH"
-            if [ "$ML_HEALTH" = "healthy" ] && [ "$FRONTEND_HEALTH" = "healthy" ]; then
-              echo "Both containers are healthy!"
-              break
-            fi
-            sleep 5
-          done
-      - name: Install LocalTunnel globally
-        run: npm install -g localtunnel
-
-      - name: Expose Streamlit frontend with LocalTunnel
-        run: |
-          nohup lt --port 8501 > lt-frontend.log 2>&1 &
-          sleep 8
-          FRONTEND_URL=$(grep -o 'https://[a-zA-Z0-9.-]*.loca.lt' lt-frontend.log | tail -1)
-          echo "FRONTEND_TUNNEL=$FRONTEND_URL" >> $GITHUB_ENV
-          echo "Streamlit frontend LocalTunnel URL: $FRONTEND_URL"
-      - name: Expose MLflow UI with LocalTunnel
-        run: |
-          nohup lt --port 5000 > lt-mlflow.log 2>&1 &
-          sleep 8
-          MLFLOW_URL=$(grep -o 'https://[a-zA-Z0-9.-]*.loca.lt' lt-mlflow.log | tail -1)
-          echo "MLFLOW_TUNNEL=$MLFLOW_URL" >> $GITHUB_ENV
-          echo "MLflow UI LocalTunnel URL: $MLFLOW_URL"
-      - name: Retrieve LocalTunnel password (tunnel unlock password)
-        id: get_password
-        run: |
-          # Get public IP of GitHub Actions runner (used by LocalTunnel as tunnel password)
-          TUNNEL_PASSWORD=$(curl -s https://api.ipify.org)
-          echo "LOCAL_TUNNEL_PASSWORD=$TUNNEL_PASSWORD" >> $GITHUB_ENV
-          echo "Tunnel password (use this to unlock LocalTunnel web page): $TUNNEL_PASSWORD"
-      - name: Print both tunnel links and password
-        run: |
-          echo "---- TUNNEL LINKS ----"
-          echo "Frontend: $FRONTEND_TUNNEL"
-          echo "MLflow:   $MLFLOW_TUNNEL"
-          echo "Tunnel password (public IP): $LOCAL_TUNNEL_PASSWORD"
-          echo "----------------------"
-      - name: Keep job alive (1 hour)
-        run: sleep 360
-
-      - name: Upload MLflow artifacts (optional)
-        if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: mlflow-results
-          path: |
-            mlruns/
-            models/
-            data/
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Build images
+        run: docker compose -f docker-compose.yml build
+
+      - name: Start containers
+        run: docker compose -f docker-compose.yml up -d
+
+      - name: Wait for both containers to be healthy
+        run: |
+          for i in $(seq 1 40); do
+            ML=$(docker inspect --format='{{.State.Health.Status}}' potato-mlflow)
+            FE=$(docker inspect --format='{{.State.Health.Status}}' potato-frontend)
+            echo "attempt $i: mlflow=$ML frontend=$FE"
+            if [ "$ML" = "healthy" ] && [ "$FE" = "healthy" ]; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "containers did not become healthy in time" >&2
+          exit 1
+
+      - name: Smoke-test the endpoints
+        run: |
+          curl -fsS http://localhost:5000/health
+          curl -fsS http://localhost:8501/_stcore/health
+
+      - name: Show container status and logs
+        if: failure()
+        run: |
+          docker compose -f docker-compose.yml ps
+          docker compose -f docker-compose.yml logs --tail=200
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.yml down -v

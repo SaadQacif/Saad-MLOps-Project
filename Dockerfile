@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libgl1-mesa-glx \
+    libgl1 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -39,4 +39,4 @@ ENV MLFLOW_TRACKING_URI=http://mlflow-server:5000
 EXPOSE 8501
 
 # Default command (can be overridden)
-CMD ["streamlit", "run", "src/frontend.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "src/enhanced_complete_frontend_fixed.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
