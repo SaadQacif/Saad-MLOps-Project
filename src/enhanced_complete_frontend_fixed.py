@@ -109,6 +109,8 @@ try:
 except ImportError:
     MLflowManager = None
 
+from src import serving  # noqa: E402  (shared training/serving feature and model path)
+
 st.set_page_config(
     page_title="🥔 Potato Disease Classifier - Enhanced", 
     page_icon="🥔",
@@ -125,41 +127,22 @@ class EnhancedModelManager:
         self.use_local_tracking = True
 
     def discover_available_models(self) -> Dict[str, Dict[str, Any]]:
+        """Models recorded in models/bin/model_metadata.json by the training script
+        (each with its own scaler, encoder and held-out accuracy)."""
         models = {}
-        
-        # Bin models (feature-based, 30 features)
-        if self.bin_dir.exists():
-            model_files = list(self.bin_dir.glob("*_model.pkl"))
-            for model_file in model_files:
-                model_name = model_file.stem.replace("_model", "")
-                models[f"{model_name} (Feature-based)"] = {
-                    "model_path": str(model_file),
-                    "model_name": model_name,
-                    "model_type": "feature-based",
-                    "source": "bin",
-                    "timestamp": datetime.fromtimestamp(model_file.stat().st_mtime),
-                    "encoder_path": self._find_file(self.bin_dir, ["label_encoder.pkl", "encoder.pkl"]),
-                    "scaler_path": self._find_file(self.bin_dir, ["scaler.pkl", "standard_scaler.pkl"]),
-                    "metadata_path": self._find_file(self.bin_dir, ["model_metadata.json", "pipeline_summary.json"])
-                }
-        
-        # Root models (feature-based, 30 features)
-        model_files = list(self.models_dir.glob("*_model.pkl"))
-        for model_file in model_files:
-            model_name = model_file.stem.replace("_model", "")
-            key = f"{model_name} (Feature-based)"
-            if key not in models:
-                models[key] = {
-                    "model_path": str(model_file),
-                    "model_name": model_name,
-                    "model_type": "feature-based",
-                    "source": "root",
-                    "timestamp": datetime.fromtimestamp(model_file.stat().st_mtime),
-                    "encoder_path": self._find_file(self.models_dir, ["label_encoder.pkl", "encoder.pkl"]),
-                    "scaler_path": self._find_file(self.models_dir, ["scaler.pkl", "standard_scaler.pkl"]),
-                    "metadata_path": self._find_file(self.models_dir, ["model_metadata.json", "pipeline_summary.json"])
-                }
-        
+        meta = serving.load_metadata(self.bin_dir)
+        for model_name, info in meta.get("models", {}).items():
+            model_file = self.bin_dir / info["file"]
+            if not model_file.exists():
+                continue
+            models[f"{model_name} (held-out acc {info['held_out_accuracy']:.3f})"] = {
+                "model_path": str(model_file),
+                "model_name": model_name,
+                "model_type": info["estimator"],
+                "source": "bin",
+                "timestamp": datetime.fromtimestamp(model_file.stat().st_mtime),
+                "model_dir": str(self.bin_dir),
+            }
         return models
 
     def _find_file(self, directory: Path, filenames: list) -> Optional[str]:
@@ -291,36 +274,12 @@ def extract_image_features(image: Image.Image, model_info: Dict[str, Any] = None
         return None
 
 def predict_with_model(image: Image.Image, model_info: Dict[str, Any]) -> Dict[str, Any]:
+    """Predict through src.serving, the same feature and model path as training and the API."""
     try:
-        model, encoder, scaler, metadata = model_manager.load_model_artifacts(model_info)
-        features_df = extract_image_features(image, model_info)
-        
-        if features_df is None:
-            return {"error": "Failed to extract features from image"}
-        
-        # Check scaler/feature shape match
-        if hasattr(scaler, 'mean_') and scaler.mean_.shape[0] != features_df.shape[1]:
-            return {"error": f"Scaler expects {scaler.mean_.shape[0]} features, but got {features_df.shape[1]}. Please retrain and save the scaler with the correct number of features."}
-        
-        features_scaled = scaler.transform(features_df.values)
-        prediction = model.predict(features_scaled)[0]
-        probabilities = model.predict_proba(features_scaled)[0] if hasattr(model, 'predict_proba') else None
-        
-        predicted_class = encoder.inverse_transform([prediction])[0] if hasattr(encoder, 'inverse_transform') else encoder.classes_[prediction]
-        confidence = float(np.max(probabilities)) if probabilities is not None else 0.0
-        
-        class_probs = {}
-        if probabilities is not None:
-            for i, prob in enumerate(probabilities):
-                class_name = encoder.classes_[i]
-                class_probs[class_name] = float(prob)
-        
-        return {
-            "prediction": predicted_class,
-            "confidence": confidence,
-            "probabilities": class_probs,
-            "model_info": model_info
-        }
+        predictor = serving.load_predictor(model_info["model_name"], model_info["model_dir"])
+        result = predictor.predict_image(image)
+        result["model_info"] = model_info
+        return result
     except Exception as e:
         logger.error(f"Prediction error: {e}")
         return {"error": f"Prediction failed: {str(e)}"}
@@ -537,9 +496,8 @@ def main():
                         "Model Type": model_info["model_type"],
                         "Source Directory": model_info["source"],
                         "Last Modified": str(model_info["timestamp"]),
-                        "Encoder Available": bool(model_info["encoder_path"]),
-                        "Scaler Available": bool(model_info["scaler_path"]),
-                        "Metadata Available": bool(model_info["metadata_path"])
+                        "Held-out Accuracy": serving.load_metadata(model_info["model_dir"])
+                            ["models"][model_info["model_name"]]["held_out_accuracy"],
                     })
         
         # Storage Statistics

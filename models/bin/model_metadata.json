@@ -1,5 +1,6 @@
 {
-  "model_type": "GradientBoosting",
+  "created_at": "2026-11-02T18:41:15+00:00",
+  "training_script": "scripts/train_and_save_all_models.py",
   "features": [
     "r_dev",
     "g_dev",
@@ -37,43 +38,264 @@
     "Potato___Late_blight",
     "Potato___healthy"
   ],
-  "metrics": {
-    "accuracy": 0.9460966542750929,
-    "weighted_f1": 0.9459780235506706,
-    "weighted_precision": 0.9465173756810217,
-    "weighted_recall": 0.9460966542750929,
-    "roc_auc": 0.9944339668615984
+  "split": {
+    "method": "stratified train_test_split",
+    "test_size": 0.2,
+    "seed": 42,
+    "n_train": 1721,
+    "n_test": 431,
+    "class_counts": {
+      "Potato___Early_blight": 1000,
+      "Potato___Late_blight": 1000,
+      "Potato___healthy": 152
+    }
   },
-  "feature_importance": [
-    0.1088307724977251,
-    0.00423921848834074,
-    0.13546250299940055,
-    0.015611229550597655,
-    0.15982273149969406,
-    0.017050144938819307,
-    0.002379904517320804,
-    0.0005252158853337313,
-    0.003438097073459637,
-    0.0021021380425464377,
-    0.0005705538675858468,
-    0.01072928211161318,
-    0.050795948676006425,
-    0.009837356651674256,
-    0.007588782913519845,
-    0.009794260703102317,
-    0.18846753595716007,
-    0.005847178977155986,
-    0.003590542379673345,
-    0.0013643360934860026,
-    0.01254633116881657,
-    0.006360446806111269,
-    0.003382008344997505,
-    0.2089427764629573,
-    0.004740507836441866,
-    0.003307275091423138,
-    0.002581772810640608,
-    0.011663361831916642,
-    0.003899542306744025,
-    0.0045282435157358155
-  ]
+  "data": {
+    "features_csv": "data/features/potato_features.csv",
+    "features_sha256": "2c6d80f43b93cbf3f8f92fe8e38081054484346a855452ce45b22344a872fa9d",
+    "reference_csv": "data/features/reference_features.csv"
+  },
+  "environment": {
+    "python": "3.10.22",
+    "scikit_learn": "1.5.2",
+    "numpy": "1.26.4",
+    "pandas": "2.3.3"
+  },
+  "scaler_file": "scaler.pkl",
+  "encoder_file": "label_encoder.pkl",
+  "models": {
+    "svm": {
+      "file": "svm_model.pkl",
+      "estimator": "SVC",
+      "params": {
+        "C": 1.0,
+        "break_ties": false,
+        "cache_size": 200,
+        "class_weight": null,
+        "coef0": 0.0,
+        "decision_function_shape": "ovr",
+        "degree": 3,
+        "gamma": "scale",
+        "kernel": "rbf",
+        "max_iter": -1,
+        "probability": true,
+        "random_state": 42,
+        "shrinking": true,
+        "tol": 0.001,
+        "verbose": false
+      },
+      "held_out_accuracy": 0.8863109048723898,
+      "held_out_macro_f1": 0.8297195884866791,
+      "confusion_matrix": [
+        [
+          189,
+          11,
+          0
+        ],
+        [
+          23,
+          176,
+          1
+        ],
+        [
+          0,
+          14,
+          17
+        ]
+      ],
+      "per_class": {
+        "Potato___Early_blight": {
+          "precision": 0.8915094339622641,
+          "recall": 0.945,
+          "f1-score": 0.9174757281553398,
+          "support": 200.0
+        },
+        "Potato___Late_blight": {
+          "precision": 0.8756218905472637,
+          "recall": 0.88,
+          "f1-score": 0.8778054862842892,
+          "support": 200.0
+        },
+        "Potato___healthy": {
+          "precision": 0.9444444444444444,
+          "recall": 0.5483870967741935,
+          "f1-score": 0.6938775510204082,
+          "support": 31.0
+        },
+        "accuracy": 0.8863109048723898,
+        "macro avg": {
+          "precision": 0.9038585896513242,
+          "recall": 0.7911290322580644,
+          "f1-score": 0.8297195884866791,
+          "support": 431.0
+        },
+        "weighted avg": {
+          "precision": 0.887944414570031,
+          "recall": 0.8863109048723898,
+          "f1-score": 0.8829847957530359,
+          "support": 431.0
+        }
+      }
+    },
+    "mlp": {
+      "file": "mlp_model.pkl",
+      "estimator": "MLPClassifier",
+      "params": {
+        "activation": "relu",
+        "alpha": 0.0001,
+        "batch_size": "auto",
+        "beta_1": 0.9,
+        "beta_2": 0.999,
+        "early_stopping": true,
+        "epsilon": 1e-08,
+        "hidden_layer_sizes": [
+          100
+        ],
+        "learning_rate": "constant",
+        "learning_rate_init": 0.001,
+        "max_fun": 15000,
+        "max_iter": 1000,
+        "momentum": 0.9,
+        "n_iter_no_change": 10,
+        "nesterovs_momentum": true,
+        "power_t": 0.5,
+        "random_state": 42,
+        "shuffle": true,
+        "solver": "adam",
+        "tol": 0.0001,
+        "validation_fraction": 0.1,
+        "verbose": false,
+        "warm_start": false
+      },
+      "held_out_accuracy": 0.8700696055684455,
+      "held_out_macro_f1": 0.8142260416413792,
+      "confusion_matrix": [
+        [
+          187,
+          13,
+          0
+        ],
+        [
+          27,
+          171,
+          2
+        ],
+        [
+          0,
+          14,
+          17
+        ]
+      ],
+      "per_class": {
+        "Potato___Early_blight": {
+          "precision": 0.8738317757009346,
+          "recall": 0.935,
+          "f1-score": 0.9033816425120773,
+          "support": 200.0
+        },
+        "Potato___Late_blight": {
+          "precision": 0.8636363636363636,
+          "recall": 0.855,
+          "f1-score": 0.8592964824120602,
+          "support": 200.0
+        },
+        "Potato___healthy": {
+          "precision": 0.8947368421052632,
+          "recall": 0.5483870967741935,
+          "f1-score": 0.68,
+          "support": 31.0
+        },
+        "accuracy": 0.8700696055684455,
+        "macro avg": {
+          "precision": 0.8774016604808539,
+          "recall": 0.7794623655913978,
+          "f1-score": 0.8142260416413792,
+          "support": 431.0
+        },
+        "weighted avg": {
+          "precision": 0.8706043386838116,
+          "recall": 0.8700696055684455,
+          "f1-score": 0.8668575985726856,
+          "support": 431.0
+        }
+      }
+    },
+    "randomforest": {
+      "file": "randomforest_model.pkl",
+      "estimator": "RandomForestClassifier",
+      "params": {
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "class_weight": null,
+        "criterion": "gini",
+        "max_depth": null,
+        "max_features": "sqrt",
+        "max_leaf_nodes": null,
+        "max_samples": null,
+        "min_impurity_decrease": 0.0,
+        "min_samples_leaf": 1,
+        "min_samples_split": 2,
+        "min_weight_fraction_leaf": 0.0,
+        "monotonic_cst": null,
+        "n_estimators": 100,
+        "n_jobs": null,
+        "oob_score": false,
+        "random_state": 42,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "held_out_accuracy": 0.8839907192575406,
+      "held_out_macro_f1": 0.8153647914718599,
+      "confusion_matrix": [
+        [
+          188,
+          12,
+          0
+        ],
+        [
+          22,
+          178,
+          0
+        ],
+        [
+          0,
+          16,
+          15
+        ]
+      ],
+      "per_class": {
+        "Potato___Early_blight": {
+          "precision": 0.8952380952380953,
+          "recall": 0.94,
+          "f1-score": 0.9170731707317074,
+          "support": 200.0
+        },
+        "Potato___Late_blight": {
+          "precision": 0.8640776699029126,
+          "recall": 0.89,
+          "f1-score": 0.8768472906403941,
+          "support": 200.0
+        },
+        "Potato___healthy": {
+          "precision": 1.0,
+          "recall": 0.4838709677419355,
+          "f1-score": 0.6521739130434783,
+          "support": 31.0
+        },
+        "accuracy": 0.8839907192575406,
+        "macro avg": {
+          "precision": 0.9197719217136693,
+          "recall": 0.7712903225806452,
+          "f1-score": 0.8153647914718599,
+          "support": 431.0
+        },
+        "weighted avg": {
+          "precision": 0.8883135801118366,
+          "recall": 0.8839907192575406,
+          "f1-score": 0.8793537902059586,
+          "support": 431.0
+        }
+      }
+    }
+  }
 }

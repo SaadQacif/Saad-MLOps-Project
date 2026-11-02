@@ -46,6 +46,15 @@ jobs:
       - name: Prediction tests
         run: pytest tests/test_predictions.py
 
+      - name: Model quality gates (train/serve skew, committed models, held-out accuracy, frontend)
+        run: pytest -s tests/test_model_quality.py
+
+      - name: Drift detection tests
+        run: pytest tests/test_drift.py
+
+      - name: REST API tests (predictions, validation, auth, drift endpoint)
+        run: pytest tests/test_api.py
+
       - name: Upload workflow output
         if: always()
         uses: actions/upload-artifact@v4

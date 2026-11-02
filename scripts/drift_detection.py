@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 """
-Data and model drift detection for monitoring ML model performance
+Data drift detection: compares the features of served images (the API's prediction
+log) with the features the model was trained on (data/features/reference_features.csv).
+
+A feature counts as drifted when its two-sample Kolmogorov-Smirnov test is
+significant after a Bonferroni correction over the features tested
+(p < ALPHA / n_features). Mann-Whitney U, PSI, mean shift and std ratio are
+reported for each feature as context but do not decide drift. Overall drift is
+flagged when more than DRIFT_FEATURE_SHARE of the features drifted and the current
+window holds at least MIN_SAMPLES rows; smaller windows are reported as
+insufficient data rather than as "no drift".
 """
 
 import os
@@ -11,9 +20,11 @@ import argparse
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from datetime import datetime, timedelta
-import mlflow
-from mlflow.tracking import MlflowClient
+from datetime import datetime
+
+ALPHA = 0.05
+DRIFT_FEATURE_SHARE = 0.1
+MIN_SAMPLES = 30
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -29,20 +40,32 @@ logger = logging.getLogger(__name__)
 class DriftDetector:
     """Data and model drift detection system"""
     
-    def __init__(self, 
-                 reference_data_path: str,
-                 current_data_path: str,
-                 output_path: str,
+    def __init__(self,
+                 reference_data_path: str = None,
+                 current_data_path: str = None,
+                 output_path: str = None,
                  mlflow_uri: str = None):
-        self.reference_data_path = Path(reference_data_path)
-        self.current_data_path = Path(current_data_path)
-        self.output_path = Path(output_path)
-        self.output_path.mkdir(parents=True, exist_ok=True)
+        self.reference_data_path = Path(reference_data_path) if reference_data_path else None
+        self.current_data_path = Path(current_data_path) if current_data_path else None
+        self.output_path = Path(output_path) if output_path else None
+        if self.output_path:
+            self.output_path.mkdir(parents=True, exist_ok=True)
+        # MLflow is only needed by run_drift_detection (the CLI); the API calls analyse()
         self.mlflow_uri = mlflow_uri or os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
-        
-        # Initialize MLflow
-        mlflow.set_tracking_uri(self.mlflow_uri)
-        self.client = MlflowClient(tracking_uri=self.mlflow_uri)
+
+    def analyse(self, reference_data: pd.DataFrame, current_data: pd.DataFrame) -> dict:
+        """Drift report for two feature tables, without MLflow or files."""
+        report = self.generate_drift_report(
+            self.calculate_statistical_drift(reference_data, current_data),
+            self.detect_class_distribution_drift(reference_data, current_data))
+        report['summary']['reference_size'] = int(len(reference_data))
+        report['summary']['current_size'] = int(len(current_data))
+        if len(current_data) < MIN_SAMPLES:
+            report['summary']['drift_detected'] = None
+            report['summary']['status'] = f"insufficient_data (need {MIN_SAMPLES} samples)"
+        else:
+            report['summary']['status'] = "drift" if report['summary']['drift_detected'] else "no_drift"
+        return report
 
     def load_data(self, data_path: Path):
         """Load data from CSV or directory structure"""
@@ -71,18 +94,19 @@ class DriftDetector:
         drift_results = {}
         
         # Ensure we have the same columns
-        common_columns = set(reference_data.columns) & set(current_data.columns)
+        common_columns = [c for c in reference_data.columns if c in set(current_data.columns)]
         numeric_columns = []
-        
+
         for col in common_columns:
             if col != 'class' and pd.api.types.is_numeric_dtype(reference_data[col]):
                 numeric_columns.append(col)
-        
+
         logger.info(f"Analyzing drift for {len(numeric_columns)} numeric features")
-        
+        ks_alpha = ALPHA / max(len(numeric_columns), 1)  # Bonferroni over the features tested
+
         for column in numeric_columns:
-            ref_values = reference_data[col].dropna()
-            cur_values = current_data[col].dropna()
+            ref_values = reference_data[column].dropna()
+            cur_values = current_data[column].dropna()
             
             # Kolmogorov-Smirnov test
             ks_statistic, ks_p_value = stats.ks_2samp(ref_values, cur_values)
@@ -104,9 +128,10 @@ class DriftDetector:
             std_ratio = cur_std / ref_std if ref_std > 0 else 1
             
             drift_results[column] = {
-                'ks_statistic': ks_statistic,
-                'ks_p_value': ks_p_value,
-                'ks_drift_detected': ks_p_value < 0.05 if ks_p_value is not None else False,
+                'ks_statistic': float(ks_statistic),
+                'ks_p_value': float(ks_p_value),
+                'ks_alpha_bonferroni': ks_alpha,
+                'ks_drift_detected': bool(ks_p_value < ks_alpha),
                 'mw_statistic': mw_statistic,
                 'mw_p_value': mw_p_value,
                 'mw_drift_detected': mw_p_value < 0.05 if mw_p_value is not None else False,
@@ -216,49 +241,45 @@ class DriftDetector:
             'summary': {
                 'total_features_analyzed': len(statistical_drift),
                 'features_with_drift': 0,
-                'drift_detection_methods': ['ks_test', 'mannwhitney_u', 'psi', 'mean_shift', 'std_change'],
-                'class_distribution_drift': class_drift.get('overall', {}).get('distribution_drift_detected', False)
+                'drifted_features': [],
+                'decision_rule': (f"feature drifts if KS p < {ALPHA}/n_features (Bonferroni); "
+                                  f"drift if share of drifted features > {DRIFT_FEATURE_SHARE} "
+                                  f"with at least {MIN_SAMPLES} current samples"),
+                'class_distribution_drift': bool(class_drift.get('overall', {}).get('distribution_drift_detected', False))
             },
             'feature_drift': statistical_drift,
             'class_drift': class_drift,
             'recommendations': []
         }
-        
-        # Count features with drift
+
+        # Only the corrected KS test decides; the other statistics are context
         for feature, results in statistical_drift.items():
-            drift_detected = any([
-                results.get('ks_drift_detected', False),
-                results.get('mw_drift_detected', False),
-                results.get('psi_drift_detected', False),
-                results.get('mean_drift_detected', False),
-                results.get('std_drift_detected', False)
-            ])
-            
-            if drift_detected:
+            if results.get('ks_drift_detected', False):
                 report['summary']['features_with_drift'] += 1
-        
-        # Generate recommendations
-        if report['summary']['features_with_drift'] > 0:
-            report['recommendations'].append("Feature drift detected. Consider retraining the model.")
-        
-        if report['summary']['class_distribution_drift']:
-            report['recommendations'].append("Class distribution drift detected. Review data pipeline and consider rebalancing.")
-        
+                report['summary']['drifted_features'].append(feature)
+
         drift_ratio = report['summary']['features_with_drift'] / max(report['summary']['total_features_analyzed'], 1)
-        
+        report['summary']['drift_ratio'] = drift_ratio
+        report['summary']['drift_detected'] = drift_ratio > DRIFT_FEATURE_SHARE
+
         if drift_ratio > 0.3:
             report['recommendations'].append("High proportion of features showing drift. Immediate model retraining recommended.")
-        elif drift_ratio > 0.1:
+        elif drift_ratio > DRIFT_FEATURE_SHARE:
             report['recommendations'].append("Moderate feature drift detected. Schedule model retraining.")
         else:
             report['recommendations'].append("Minimal drift detected. Continue monitoring.")
-        
+
+        if report['summary']['class_distribution_drift']:
+            report['recommendations'].append("Predicted-class distribution differs from training. Review incoming data.")
+
         return report
 
     def run_drift_detection(self):
         """Run complete drift detection pipeline"""
         logger.info("Starting drift detection...")
-        
+        import mlflow
+        mlflow.set_tracking_uri(self.mlflow_uri)
+
         experiment_name = "drift-detection"
         
         try:
@@ -283,16 +304,9 @@ class DriftDetector:
                 mlflow.log_metric("reference_data_size", len(reference_data))
                 mlflow.log_metric("current_data_size", len(current_data))
                 
-                # Detect statistical drift
-                logger.info("Calculating statistical drift...")
-                statistical_drift = self.calculate_statistical_drift(reference_data, current_data)
-                
-                # Detect class distribution drift
-                logger.info("Analyzing class distribution drift...")
-                class_drift = self.detect_class_distribution_drift(reference_data, current_data)
-                
-                # Generate report
-                report = self.generate_drift_report(statistical_drift, class_drift)
+                logger.info("Calculating drift...")
+                report = self.analyse(reference_data, current_data)
+                class_drift = report['class_drift']
                 
                 # Log metrics to MLflow
                 mlflow.log_metric("features_with_drift", report['summary']['features_with_drift'])

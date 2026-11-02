@@ -1,37 +1,141 @@
-# Core dependencies
-numpy>=1.22.0
-pillow>=9.0.0
-opencv-python>=4.5.0
-scikit-image>=0.19.0
-scikit-learn>=1.0.0
-scipy>=1.9.0
-textstat>=0.7.0
-matplotlib>=3.5.0
-pandas>=1.4.0
-seaborn>=0.11.0
-joblib>=1.2.0
-streamlit>=1.28.0
-PyWavelets>=1.4.0
-
-# API dependencies
-flask>=2.0.0
-flask-restx>=1.1.0  # For API documentation
-werkzeug>=2.0.0
-gunicorn>=20.1.0
-
-# MLOps dependencies
-mlflow>=2.3.0
-pyyaml>=6.0
-sqlalchemy>=1.4.0
-sqlalchemy_utils>=0.38.0
-kubernetes>=28.1.0
-
-# Development dependencies
-pytest>=7.0.0
-pytest-cov>=2.0.0
-flake8>=4.0.0
-black>=22.0.0
-isort>=5.12.0
-
-# Docker and deployment
-python-dotenv>=0.20.0
+aiohappyeyeballs==2.7.1   # via aiohttp
+aiohttp==3.14.5           # via aiohttp-retry, kubernetes
+aiohttp-retry==2.9.1      # via kubernetes
+aiosignal==1.4.0          # via aiohttp
+alembic==1.20.1           # via mlflow
+altair==6.2.2             # via streamlit
+aniso8601==10.0.1         # via flask-restx
+annotated-doc==0.0.5      # via fastapi
+annotated-types==0.8.0    # via pydantic
+anyio==4.16.0             # via starlette, streamlit
+async-timeout==5.0.1      # via aiohttp
+attrs==26.1.0             # via aiohttp, jsonschema, referencing
+black==26.10.1            # via -r requirements.in
+blinker==1.9.0            # via flask
+cachetools==5.5.2         # via mlflow-skinny
+certifi==2026.10.23       # via databricks-sdk, kubernetes, requests
+cffi==2.1.1               # via cryptography
+charset-normalizer==3.5.2  # via requests
+click==8.5.0              # via black, flask, mlflow-skinny, nltk, streamlit, uvicorn
+cloudpickle==3.1.2        # via joblib, mlflow-skinny
+contourpy==1.3.2          # via matplotlib
+coverage==7.16.2          # via pytest-cov
+cryptography==50.0.2      # via google-auth
+cycler==0.12.1            # via matplotlib
+databricks-sdk==0.159.0   # via mlflow-skinny
+defusedxml==0.7.1         # via nltk
+docker==7.2.0             # via mlflow
+durationpy==0.11          # via kubernetes
+exceptiongroup==1.3.1     # via anyio, pytest
+fastapi==0.162.0          # via mlflow-skinny
+flake8==7.4.1             # via -r requirements.in
+flask==3.1.3              # via flask-restx, mlflow, -r requirements.in
+flask-restx==1.3.2        # via -r requirements.in
+fonttools==4.65.0         # via matplotlib
+frozenlist==1.8.0         # via aiohttp, aiosignal
+gitdb==4.0.12             # via gitpython
+gitpython==3.2.1          # via mlflow-skinny
+google-auth==2.62.0       # via databricks-sdk
+graphene==3.4.3           # via mlflow
+graphql-core==3.2.13      # via graphene, graphql-relay
+graphql-relay==3.2.0      # via graphene
+greenlet==3.5.6           # via sqlalchemy
+gunicorn==23.0.0          # via mlflow, -r requirements.in
+h11==0.16.0               # via uvicorn
+httptools==0.9.0          # via streamlit
+idna==3.20                # via anyio, requests, yarl
+imageio==2.38.0           # via scikit-image
+importlib-metadata==8.9.0  # via mlflow-skinny
+importlib-resources==7.1.0  # via flask-restx
+iniconfig==2.3.1          # via pytest
+isort==9.0.2              # via -r requirements.in
+itsdangerous==2.2.0       # via flask, streamlit
+jinja2==3.1.6             # via altair, flask, mlflow, pydeck
+joblib==1.6.0             # via nltk, scikit-learn, -r requirements.in
+jsonschema==4.26.0        # via altair, flask-restx
+jsonschema-specifications==2025.9.1  # via jsonschema
+kiwisolver==1.5.1         # via matplotlib
+kubernetes==37.0.1        # via -r requirements.in
+lazy-loader==0.6          # via scikit-image
+mako==1.4.3               # via alembic
+markdown==3.10.3          # via mlflow
+markupsafe==3.0.4         # via flask, jinja2, mako, werkzeug
+matplotlib==3.10.9        # via mlflow, seaborn, -r requirements.in
+mccabe==0.7.0             # via flake8
+mlflow==2.22.0            # via -r requirements.in
+mlflow-skinny==2.22.0     # via mlflow
+multidict==7.1.0          # via aiohttp, yarl
+mypy-extensions==1.1.0    # via black, isort
+narwhals==2.28.0          # via altair, plotly
+networkx==3.4.2           # via scikit-image
+nltk==3.10.4              # via textstat
+numpy==1.26.4             # via contourpy, imageio, matplotlib, mlflow, opencv-python-headless, pandas, pydeck, pywavelets, scikit-image, scikit-learn, scipy, seaborn, streamlit, tifffile, -r requirements.in
+oauthlib==4.0.1           # via requests-oauthlib
+opencv-python-headless==4.11.0.86  # via -r requirements.in
+opentelemetry-api==1.45.2  # via fastapi, mlflow-skinny, opentelemetry-sdk, opentelemetry-semantic-conventions
+opentelemetry-sdk==1.45.2  # via mlflow-skinny
+opentelemetry-semantic-conventions==0.66b2  # via opentelemetry-sdk
+packaging==24.2           # via altair, black, gunicorn, lazy-loader, matplotlib, mlflow-skinny, plotly, pytest, scikit-image, streamlit
+pandas==2.3.3             # via mlflow, seaborn, streamlit, -r requirements.in
+pathspec==1.1.1           # via black
+pillow==12.3.0            # via imageio, matplotlib, scikit-image, streamlit, -r requirements.in
+platformdirs==4.12.4      # via black
+plotly==7.1.0             # via -r requirements.in
+pluggy==1.7.0             # via pytest, pytest-cov
+propcache==0.5.4          # via aiohttp, yarl
+protobuf==6.33.6          # via databricks-sdk, mlflow-skinny, streamlit
+pyarrow==19.0.1           # via mlflow, streamlit
+pyasn1==0.6.5             # via pyasn1-modules
+pyasn1-modules==0.4.2     # via google-auth
+pycodestyle==2.15.0       # via flake8
+pycparser==3.11           # via cffi
+pydantic==2.14.2          # via fastapi, kubernetes, mlflow-skinny
+pydantic-core==2.50.2     # via pydantic
+pydeck==0.9.3             # via streamlit
+pyflakes==4.0.3           # via flake8
+pygments==2.21.0          # via pytest
+pyparsing==3.3.3          # via matplotlib
+pyphen==0.18.1            # via textstat
+pytest==9.2.0             # via pytest-cov, -r requirements.in
+pytest-cov==7.1.0         # via -r requirements.in
+python-dateutil==2.9.0.post0  # via graphene, kubernetes, matplotlib, pandas
+python-dotenv==1.2.4      # via -r requirements.in
+python-multipart==0.0.32  # via streamlit
+pytokens==0.4.1           # via black
+pytz==2026.6              # via pandas
+pywavelets==1.8.0         # via -r requirements.in
+pyyaml==6.0.3             # via kubernetes, mlflow-skinny, -r requirements.in
+referencing==0.37.0       # via flask-restx, jsonschema, jsonschema-specifications
+regex==2026.9.29          # via nltk
+requests==2.34.2          # via databricks-sdk, docker, kubernetes, mlflow-skinny, requests-oauthlib, streamlit, -r requirements.in
+requests-oauthlib==2.0.0  # via kubernetes
+rpds-py==0.30.0           # via jsonschema, referencing
+scikit-image==0.25.2      # via -r requirements.in
+scikit-learn==1.5.2       # via mlflow, -r requirements.in
+scipy==1.15.3             # via mlflow, scikit-image, scikit-learn, -r requirements.in
+seaborn==0.13.2           # via -r requirements.in
+setuptools==84.2.1        # via textstat
+six==1.17.0               # via python-dateutil
+smmap==5.0.3              # via gitdb
+sqlalchemy==2.0.55        # via alembic, mlflow, sqlalchemy-utils, -r requirements.in
+sqlalchemy-utils==0.43.0  # via -r requirements.in
+sqlparse==0.6.1           # via mlflow-skinny
+starlette==1.7.0          # via fastapi, streamlit
+streamlit==1.65.0         # via -r requirements.in
+textstat==0.7.13          # via -r requirements.in
+threadpoolctl==3.7.0      # via scikit-learn
+tifffile==2025.5.10       # via scikit-image
+toml==0.10.2              # via streamlit
+tomli==2.5.0              # via alembic, black, coverage, pytest
+tqdm==4.70.1              # via nltk
+typing-extensions==4.16.0  # via aiohttp, aiosignal, alembic, altair, anyio, black, cryptography, exceptiongroup, fastapi, graphene, kubernetes, mlflow-skinny, multidict, opentelemetry-api, opentelemetry-sdk, opentelemetry-semantic-conventions, pydantic, pydantic-core, referencing, sqlalchemy, starlette, streamlit, typing-inspection, uvicorn
+typing-inspection==0.4.4  # via fastapi, pydantic
+tzdata==2026.6            # via pandas
+urllib3==2.8.0            # via databricks-sdk, docker, kubernetes, requests
+uvicorn==0.54.0           # via mlflow-skinny, streamlit
+watchdog==6.0.0           # via streamlit
+websocket-client==1.9.2   # via kubernetes
+websockets==16.1.1        # via streamlit
+werkzeug==3.1.9           # via flask, flask-restx, -r requirements.in
+yarl==1.25.1              # via aiohttp
+zipp==4.1.2               # via importlib-metadata

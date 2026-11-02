@@ -1,0 +1,49 @@
+# Top-level dependencies. requirements.txt is the lock compiled from this file and
+# is what CI and every Docker image install, so all environments match. After
+# editing this file, regenerate the lock (Linux, Python 3.10, like the images):
+#
+#   uv pip compile requirements.in -o requirements.txt \
+#       --python-version 3.10 --python-platform x86_64-manylinux_2_28
+
+# The committed models in models/ were pickled with scikit-learn 1.5.2 and numpy 1.x;
+# loading them with other versions is not supported by scikit-learn.
+scikit-learn==1.5.2
+numpy<2
+
+# Core
+pillow
+opencv-python-headless
+scikit-image
+scipy
+textstat
+matplotlib
+pandas
+seaborn
+joblib
+PyWavelets
+
+# Frontend
+streamlit
+plotly
+requests
+
+# API
+flask
+flask-restx
+werkzeug
+gunicorn
+
+# MLOps (client matches the MLflow server image, Dockerfile.mlflow)
+mlflow==2.22.0
+pyyaml
+sqlalchemy
+sqlalchemy_utils
+kubernetes
+python-dotenv
+
+# Development
+pytest
+pytest-cov
+flake8
+black
+isort

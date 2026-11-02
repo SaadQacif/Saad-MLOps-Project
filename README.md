@@ -1,347 +1,178 @@
-# Potato Disease Classification MLOps Project
+# Potato Leaf Disease Classification — MLOps Pipeline
 
-This repository contains a comprehensive Python-based MLOps project for potato disease image classification. It implements a complete MLOps workflow with proper project structure, MLflow model tracking, Kubernetes deployment, and Docker containerization. The system classifies potato leaf images into three categories: Healthy, Early Blight, and Late Blight.
+Classifies potato leaf images as **healthy**, **early blight** or **late blight**, and
+wraps the model in the parts of an MLOps workflow that are tested on every push: one
+shared training/serving feature path, a REST API, a Streamlit app, data-drift
+monitoring, locked dependencies, Docker images and CI/CD on GitHub Actions.
 
-## Project Structure
+## Results
+
+Held-out accuracy on 431 images (stratified 20% split, seed 42) that the served models
+never saw during training. These are the files in `models/bin/`; the numbers are
+written by the training script to `models/bin/model_metadata.json`, and CI re-trains
+and checks that it reproduces them exactly.
+
+| model | accuracy | macro F1 | healthy recall |
+|---|---|---|---|
+| SVM (served by default) | **0.886** | 0.830 | 0.55 |
+| Random Forest | 0.884 | 0.815 | 0.48 |
+| MLP | 0.870 | 0.814 | 0.55 |
+
+The weak spot is the **healthy** class: it has 152 images against 1,000 for each
+disease, and about half of the healthy test leaves are classified as diseased. See
+[Limitations](#limitations).
+
+## Architecture
 
 ```
-mlops-python/
-├── configs/              # Configuration files
-├── data/                 # Data directory
-│   ├── inputs/           # Input images
-│   ├── outputs/          # Output predictions
-│   └── uploads/          # API uploads
-├── deployment/           # Deployment configurations
-├── docs/                 # Documentation
-├── logs/                 # Log files
-├── models/               # Trained models
-│   ├── bin/              # Serialized model files
-│   └── tracking/         # Model tracking data
-├── notebooks/            # Jupyter notebooks
-├── scripts/              # Utility scripts
-├── src/                  # Source code
-│   ├── api.py            # Flask API with Swagger documentation
-│   ├── evaluate_model.py # Model evaluation script
-│   ├── image_processing.py # Image processing functions
-│   ├── main.py           # Main script for batch processing
-│   ├── model_monitoring.py # Model monitoring system
-│   ├── model_tracking.py # MLFlow-like model tracking
-│   ├── monitoring.py     # API monitoring system
-│   ├── segmentation.py   # Image segmentation module
-│   ├── train_model.py    # Model training with hyperparameter tuning
-│   └── utils.py          # Utility functions
-├── tests/                # Test files
-├── visualizations/       # Visualization outputs
-├── .github/workflows/    # GitHub Actions CI/CD
-├── Dockerfile            # Docker configuration
-├── docker-compose.yml    # Docker Compose configuration
-└── requirements.txt      # Python dependencies
+images ──► src/serving.py: features_from_image ──► scaler ──► model ──► class
+              ▲ used identically by                                  │
+              ├─ scripts/train_and_save_all_models.py  (training)    │
+              ├─ src/api.py                            (REST API) ───┼─► prediction log ──► /monitoring/drift
+              └─ src/enhanced_complete_frontend_fixed.py (Streamlit)  │        (KS test vs training features)
 ```
 
-## Features
+* **One feature path.** Training, the API and the frontend all call
+  `src.serving.features_from_image`, so a model is always served the same features it
+  was trained on. A test recomputes features from the images and compares them with
+  the training data (train/serve skew check).
+* **Training** (`scripts/train_and_save_all_models.py`) extracts features from
+  `data/processed/`, makes the split, fits scaler and models on the 80% only, scores
+  them on the 20%, and records metrics, split, data hash and library versions in
+  `model_metadata.json`.
+* **REST API** (`src/api.py`, Flask + Swagger at `/docs`, gunicorn in Docker).
+* **Frontend** (Streamlit) lists the trained models with their held-out accuracy.
+* **Drift monitoring.** The API logs the features of every image it classifies; the
+  drift endpoint compares the most recent window with the training features.
+* **MLflow** tracking server runs in Docker Compose for the experiment-tracking
+  pipeline in `scripts/complete_mlflow_pipeline.py`.
 
-- **Image Processing**
-  - Advanced image segmentation and contour detection
-  - Feature extraction from images using statistical techniques
-  - CLAHE enhancement for better feature detection
-
-- **Machine Learning**
-  - Automated hyperparameter tuning with GridSearchCV
-  - Comprehensive model evaluation with multiple metrics
-  - Feature importance analysis and visualization
-  - Model tracking and versioning system similar to MLFlow
-
-- **Monitoring & Observability**
-  - Real-time model performance monitoring
-  - Feature and prediction drift detection
-  - API usage and performance tracking
-  - Comprehensive logging system
-
-- **API & Deployment**
-  - RESTful API with Swagger documentation
-  - Multi-environment deployment (dev, test, prod)
-  - Dockerized services with Docker Compose
-  - CI/CD pipeline with GitHub Actions
-
-- **MLOps Best Practices**
-  - Configuration management
-  - Model versioning and governance
-  - Reproducible training and evaluation
-  - Environment consistency with containers
-
-## Requirements
-
-- Python 3.8+ (3.10+ recommended)
-- Docker and Docker Compose
-- Required Python packages (see `requirements.txt`)
-- 4GB+ RAM for model training
-
-## Advanced Features
-
-### Model Tracking System
-
-The project includes a lightweight model tracking system similar to MLFlow:
-
-```python
-from model_tracking import MLFlowLikeTracker
-
-# Initialize tracker
-tracker = MLFlowLikeTracker()
-run_id = tracker.start_run("training_run")
-
-# Log parameters
-tracker.log_params(run_id, {"n_estimators": 100, "max_depth": 10})
-
-# Log metrics
-tracker.log_metric(run_id, "accuracy", 0.95)
-
-# Log model
-tracker.log_model(run_id, model, "model.pkl")
-
-# End run
-tracker.end_run(run_id)
-
-# Get best model
-best_run_id, best_run = tracker.get_best_run("accuracy", "max")
-```
-
-### Model Monitoring
-
-The system includes real-time model monitoring:
-
-```python
-from model_monitoring import ModelMonitor
-
-# Initialize monitor
-monitor = ModelMonitor(model_path="models/bin/model.pkl", 
-                       encoder_path="models/bin/encoder.pkl")
-
-# Log predictions
-monitor.log_prediction(features=features, prediction=prediction, latency=0.05)
-
-# Check drift
-drift_metrics = monitor.check_drift(recent_features=recent_batch)
-if drift_metrics["feature_drift"]["drift_detected"]:
-    send_alert("Feature drift detected!")
-```
-
-### Interactive API Documentation
-
-The API includes Swagger UI documentation at the `/docs` endpoint, making it easy to explore and test endpoints.
-
-## Importing Data from Original MLOps Project
-
-To import data from the original MLOps project, use the following PowerShell commands:
-
-```powershell
-# Create necessary directories if they don't exist
-New-Item -Path "c:\Users\PC\Desktop\mlops-python\data\inputs" -ItemType Directory -Force
-New-Item -Path "c:\Users\PC\Desktop\mlops-python\models\bin" -ItemType Directory -Force
-
-# Copy input images from original project
-Copy-Item -Path "C:\Users\PC\Desktop\MLOps\inputs\*" -Destination "c:\Users\PC\Desktop\mlops-python\data\inputs\" -Recurse -Force
-
-# Copy trained models from original project
-Copy-Item -Path "C:\Users\PC\Desktop\MLOps\bin\*" -Destination "c:\Users\PC\Desktop\mlops-python\models\bin\" -Force
-```
-
-For Unix/Linux/macOS:
+## Quick start
 
 ```bash
-# Create necessary directories if they don't exist
-mkdir -p data/inputs
-mkdir -p models/bin
-
-# Copy input images from original project
-cp -r /path/to/original/MLOps/inputs/* data/inputs/
-
-# Copy trained models from original project
-cp -r /path/to/original/MLOps/bin/* models/bin/
+docker compose up --build
 ```
 
-## Installation
+| service | URL |
+|---|---|
+| REST API (Swagger UI) | http://localhost:8000/docs |
+| Streamlit app | http://localhost:8501 |
+| MLflow UI | http://localhost:5000 |
 
-### Option 1: Local Installation
-
-1. Clone the repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-### Option 2: Docker
-
-1. Clone the repository
-2. Build and run using Docker Compose:
-   ```
-   docker-compose up
-   ```
-
-## Usage
-
-### API Service
-
-Start the API service:
+Without Docker (Python 3.10):
 
 ```bash
-docker-compose up api
+pip install -r requirements.txt
+export PYTHONPATH=$PWD:$PWD/scripts:$PWD/src
+python scripts/train_and_save_all_models.py      # ~35 s on 8 CPU cores
+gunicorn --threads 4 -b 0.0.0.0:8000 src.api:app
+streamlit run src/enhanced_complete_frontend_fixed.py
 ```
 
-This will start the Flask API on port 5000, which can be accessed at http://localhost:5000.
+## REST API
 
-### Batch Processing
-
-To process a batch of images:
+| method | path | |
+|---|---|---|
+| GET | `/health/status` | readiness, loaded model, its held-out accuracy (503 if no model) |
+| POST | `/predict/image` | multipart field `file` (≤ 10 MB) → class, confidence, per-class probabilities |
+| GET | `/monitoring/drift?window=500` | drift of recent served features against the training features |
+| GET | `/health/metrics` | request metrics; needs header `X-API-KEY` equal to `$API_ADMIN_KEY` (always 401 when the variable is unset) |
 
 ```bash
-docker-compose --profile batch up
+curl -F "file=@data/split/test/Potato___Late_blight/<image>.jpg" http://localhost:8000/predict/image
 ```
 
-### Model Training
+Response shape (values illustrative):
 
-To train a new model:
-
-```bash
-docker-compose --profile training up
+```json
+{"prediction": "Potato___Late_blight", "confidence": 0.97,
+ "probabilities": {"Potato___Late_blight": 0.97, "Potato___Early_blight": 0.02, "Potato___healthy": 0.01},
+ "model": "svm", "processing_time": 0.04}
 ```
 
-### Model Evaluation
+Configuration: `MODEL_DIR` (default `models/bin`), `MODEL_NAME` (default: best
+held-out accuracy), `PREDICTION_LOG` (default `data/monitoring/predictions.csv`),
+`API_ADMIN_KEY`.
 
-To evaluate the model:
+## Drift monitoring
 
-```bash
-docker-compose --profile evaluation up
-```
+`scripts/drift_detection.py` compares the current window with
+`data/features/reference_features.csv` (the training split):
 
-## Usage Workflow
+* a feature has drifted when its two-sample Kolmogorov–Smirnov test is significant
+  after a Bonferroni correction over the features (p < 0.05 / n);
+* the window is flagged as drift when more than 10% of the features drifted;
+* fewer than 30 samples is reported as *insufficient data*, not as "no drift";
+* PSI, Mann–Whitney U, mean shift and std ratio are reported per feature as context.
 
-### 1. Data Preprocessing
+The tests check that held-out images from the training distribution show no drift,
+that a shift in one feature is attributed to that feature only, and, end to end
+through the API, that the same leaves photographed 60% brighter are flagged.
+The same check runs from the command line on any feature table:
+`python scripts/drift_detection.py --reference-data-path ... --current-data-path ... --output-path ...`
+(this variant also logs the report to MLflow).
 
-The first step is to preprocess the raw potato disease images:
+## Testing and CI/CD
 
-```bash
-python scripts/preprocess_potato_data.py --input Potato_Health_States --output data/processed
-```
+`pytest` runs on every push to `main` and on pull requests
+(`.github/workflows/ci.yml`, Python 3.10, locked dependencies):
 
-This will create properly formatted image datasets for the three classes: Early Blight, Late Blight, and Healthy.
+| file | checks |
+|---|---|
+| `test_model_quality.py` | relative image paths; train/serve skew; committed models load with the pinned scikit-learn; every model the frontend lists predicts; re-training reproduces `model_metadata.json` and reaches ≥ 0.85 held-out accuracy; the Streamlit script runs without exceptions |
+| `test_api.py` | health; predictions on held-out images (≥ 0.8 correct); rejects missing and non-image uploads; admin key; drift endpoint end to end |
+| `test_drift.py` | no false alarm on held-out data; correct attribution of a single-feature shift; broad shift flagged; small windows reported as insufficient |
+| `test_mlflow_dataset.py`, `test_preprocessing.py`, `test_training.py`, `test_predictions.py` | the MLflow experiment pipeline in `scripts/complete_mlflow_pipeline.py` |
 
-### 2. Feature Extraction
+After CI passes on `main`, CD (`.github/workflows/cd.yml`) builds the three images
+with Docker Compose on the runner, waits for their health checks, classifies one
+held-out image of each class through the running API, queries the drift endpoint,
+and tears the stack down. The same job runs on any branch that changes a
+Dockerfile, the compose file or the requirements. Nothing is deployed or exposed
+outside the runner.
 
-Extract meaningful features from the processed images:
+**Dependencies.** `requirements.in` lists the direct dependencies;
+`requirements.txt` is the lock compiled from it for Linux / Python 3.10 and is what
+CI and every image install. scikit-learn is pinned to 1.5.2, the version the models
+are serialised with.
 
-```bash
-python scripts/extract_potato_features.py --input data/processed --output data/features/potato_features.csv
-```
-
-This extracts various features including:
-- RGB channel statistics
-- Entropy features
-- Shape features (convexity ratio, eccentricity)
-- Reduced HOG features
-
-### 3. Model Training with MLflow
-
-Start the MLflow server:
-
-```bash
-mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
-```
-
-Train the model with MLflow tracking:
-
-```bash
-python src/train_model_features.py --features data/features/potato_features.csv --model-dir models/bin --mlflow-tracking-uri http://localhost:5001
-```
-
-View the MLflow dashboard at http://localhost:5001 to track experiments, compare models, and manage the model registry.
-
-### 4. Docker Deployment
-
-Build and run the Docker containers:
-
-```bash
-docker-compose up --build
-```
-
-### 5. Kubernetes Deployment
-
-Deploy the application to Kubernetes:
-
-```bash
-python scripts/test_kubernetes_deployment.py
-```
-
-Alternatively, use kubectl directly:
-
-```bash
-kubectl apply -f kubernetes/deployment.yaml
-```
-
-### 6. Running Tests
-
-Execute the test suite:
-
-```bash
-python -m unittest discover tests
-```
-
-## API Endpoints
-
-- `GET /health`: Check API health and model status
-- `POST /predict`: Submit a single image for prediction
-- `POST /batch_predict`: Submit multiple images for prediction
-
-## Example API Usage
-
-```python
-import requests
-
-# Single image prediction
-url = 'http://localhost:5000/predict'
-files = {'image': open('path/to/image.jpg', 'rb')}
-response = requests.post(url, files=files)
-result = response.json()
-print(result)
-
-# Batch prediction
-url = 'http://localhost:5000/batch_predict'
-files = [
-    ('images', open('path/to/image1.jpg', 'rb')),
-    ('images', open('path/to/image2.jpg', 'rb'))
-]
-response = requests.post(url, files=files)
-results = response.json()
-print(results)
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Implement your changes
-4. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## System Architecture
+## Repository layout
 
 ```
-┌─────────────────┐     ┌──────────────┐     ┌────────────────┐
-│                 │     │              │     │                │
-│  Preprocessing  │────▶│   Feature    │────▶│  Model         │
-│  & Data         │     │  Extraction  │     │  Training      │
-│  Preparation    │     │              │     │  with MLflow   │
-│                 │     │              │     │                │
-└─────────────────┘     └──────────────┘     └────────┬───────┘
-                                                     │
-                                                     ▼
-┌─────────────────┐     ┌──────────────┐     ┌────────────────┐
-│                 │     │              │     │                │
-│   CI/CD         │◀────│  Kubernetes  │◀────│  Docker        │
-│   Pipeline      │     │  Deployment  │     │  Containerization│
-│   (GitHub       │     │              │     │                │
-│   Actions)      │     │              │     │                │
-└─────────────────┘     └──────────────┘     └────────────────┘
+src/serving.py                        shared feature + model path
+src/api.py                            REST API
+src/enhanced_complete_frontend_fixed.py   Streamlit app
+scripts/train_and_save_all_models.py  feature extraction, training, held-out evaluation
+scripts/extract_potato_features.py    feature definitions
+scripts/drift_detection.py            drift statistics and report
+scripts/complete_mlflow_pipeline.py   MLflow experiment pipeline (tested in CI)
+models/bin/                           served models, scaler, encoder, model_metadata.json
+data/processed/                       masked leaf images by class (training input)
+data/features/                        extracted features; reference_features.csv = training split
+tests/                                pytest suite
+Dockerfile, Dockerfile.frontend, Dockerfile.mlflow, docker-compose.yml
+.github/workflows/                    CI and CD
 ```
+
+`kubernetes/`, `docs/`, `notebooks/` and several scripts in `scripts/` come from
+earlier iterations of the project. They are kept for reference and are **not**
+exercised by CI; the Kubernetes manifests reference images that are not published.
+
+## Limitations
+
+* **17 of the 30 features are placeholders.** `extract_all_features_from_array`
+  returns a constant for the channel kurtosis and skew, green and diseased ratios,
+  entropy mean and std, texture contrast, minimum convexity and the contour features,
+  and three more duplicate other features (`red_std` = `r_dev`, …). The models
+  effectively use about 10 features. Implementing the missing ones is the most likely
+  way to improve accuracy, and in particular healthy recall.
+* **Class imbalance.** 152 healthy images against 1,000 per disease; the models are
+  trained without class weighting or resampling.
+* **One split.** Metrics come from a single stratified 80/20 split; there is no
+  cross-validation or confidence interval, so differences of ~0.01 between models are
+  not meaningful.
+* **Drift needs real traffic.** The monitoring is demonstrated with held-out and
+  artificially brightened images. The prediction log lives inside the API container;
+  in a real deployment it should go to persistent storage.
+* **The image data is committed to git** (about 36 MB under `data/`), not versioned
+  with DVC; there is no DVC remote.

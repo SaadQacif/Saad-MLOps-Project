@@ -1,42 +1,36 @@
 FROM python:3.10-slim
 
-# Set working directory
+# REST API image (src/api.py served by gunicorn on port 8000)
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
+# OpenCV runtime libraries; curl for the health check
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
+    libglib2.0-0 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Locked dependencies, the same set CI and the other images install
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Install additional dependencies for frontend
-RUN pip install --no-cache-dir streamlit pillow
+# Only what serving needs: code, trained models, and the training features used as
+# the drift reference (not the image dataset)
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY configs/ ./configs/
+COPY models/bin/ ./models/bin/
+COPY data/features/reference_features.csv ./data/features/reference_features.csv
 
-# Copy application code
-COPY . .
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
 
-# Create required directories
-RUN mkdir -p data/inputs data/outputs data/uploads models/bin tmp visualizations mlruns
+EXPOSE 8000
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONPATH=/app
-ENV MLFLOW_TRACKING_URI=http://mlflow-server:5000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health/status || exit 1
 
-# Expose ports for Streamlit
-EXPOSE 8501
-
-# Default command (can be overridden)
-CMD ["streamlit", "run", "src/enhanced_complete_frontend_fixed.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+# one process with threads: the prediction log is guarded by an in-process lock
+CMD ["gunicorn", "--workers", "1", "--threads", "4", "--bind", "0.0.0.0:8000", "--timeout", "120", "src.api:app"]

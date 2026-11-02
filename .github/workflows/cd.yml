@@ -43,13 +43,14 @@ jobs:
       - name: Start containers
         run: docker compose -f docker-compose.yml up -d
 
-      - name: Wait for both containers to be healthy
+      - name: Wait for all containers to be healthy
         run: |
           for i in $(seq 1 40); do
             ML=$(docker inspect --format='{{.State.Health.Status}}' potato-mlflow)
             FE=$(docker inspect --format='{{.State.Health.Status}}' potato-frontend)
-            echo "attempt $i: mlflow=$ML frontend=$FE"
-            if [ "$ML" = "healthy" ] && [ "$FE" = "healthy" ]; then
+            API=$(docker inspect --format='{{.State.Health.Status}}' potato-api)
+            echo "attempt $i: mlflow=$ML frontend=$FE api=$API"
+            if [ "$ML" = "healthy" ] && [ "$FE" = "healthy" ] && [ "$API" = "healthy" ]; then
               exit 0
             fi
             sleep 10
@@ -61,6 +62,15 @@ jobs:
         run: |
           curl -fsS http://localhost:5000/health
           curl -fsS http://localhost:8501/_stcore/health
+          curl -fsS http://localhost:8000/health/status
+          # classify one held-out image of each class through the running API
+          for c in Potato___Early_blight Potato___Late_blight Potato___healthy; do
+            img=$(ls data/split/test/$c/* | head -1)
+            out=$(curl -fsS -F "file=@$img" http://localhost:8000/predict/image)
+            echo "$c -> $out"
+            echo "$out" | grep -Eq '"prediction": *"Potato___(Early_blight|Late_blight|healthy)"'
+          done
+          curl -fsS http://localhost:8000/monitoring/drift
 
       - name: Show container status and logs
         if: failure()
